@@ -1,0 +1,6 @@
+Many thanks to:
+	- all the (beta) testers, especially to Bert Körn (bert-koern.de)
+	- Georg Gottschling for the Hungarian translation
+	- Thomas Erhard for the French translation
+	- Marcel Morees for the Dutch translation
+	- Dario Corti for the Italian translation
