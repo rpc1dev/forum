@@ -1,2 +1,0 @@
--> located in the "docs" directory
--> im Verzeichnis "docs"

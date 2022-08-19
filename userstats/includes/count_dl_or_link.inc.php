@@ -6,7 +6,7 @@
  * includes/count_dl_or_link.inc.php
  * -------------
  *
- * last modified:	2005-06-24
+ * last modified:	2006-12-20
  * -------------
  *
  * project:	chCounter
@@ -41,7 +41,7 @@ $aktueller_monat = chC_format_date( 'Ym', chC_get_timestamp( 'tag' ), FALSE );
 $result = $_CHC_DB->query(
 	'SELECT id, wert, url
 	FROM `'. CHC_TABLE_DOWNLOADS_AND_HYPERLINKS .'`
-	WHERE id = '. $_GET['id'] ." AND typ = '". CHC_DOWNLOAD_OR_HYPERLINK ."'"
+	WHERE id = '. $ID ." AND typ = '". CHC_DOWNLOAD_OR_HYPERLINK ."'"
 );
 
 if( $_CHC_DB->num_rows( $result ) == 0 )
