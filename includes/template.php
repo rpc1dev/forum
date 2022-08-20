@@ -36,11 +36,6 @@ class template
 	var $cachepath = '';
 	var $files = array();
 	var $filename = array();
-	var $files_inherit = array();
-	var $files_template = array();
-	var $inherit_root = '';
-	var $orig_tpl_storedb;
-	var $orig_tpl_inherits_id;
 
 	// this will hash handle names to the compiled/uncompiled code for that handle.
 	var $compiled_code = array();
@@ -56,25 +51,7 @@ class template
 		if (file_exists($phpbb_root_path . 'styles/' . $user->theme['template_path'] . '/template'))
 		{
 			$this->root = $phpbb_root_path . 'styles/' . $user->theme['template_path'] . '/template';
-			$this->cachepath = $phpbb_root_path . 'cache/tpl_' . str_replace('_', '-', $user->theme['template_path']) . '_';
-
-			if ($this->orig_tpl_storedb === null)
-			{
-				$this->orig_tpl_storedb = $user->theme['template_storedb'];
-			}
-
-			if ($this->orig_tpl_inherits_id === null)
-			{
-				$this->orig_tpl_inherits_id = $user->theme['template_inherits_id'];
-			}
-
-			$user->theme['template_storedb'] = $this->orig_tpl_storedb;
-			$user->theme['template_inherits_id'] = $this->orig_tpl_inherits_id;
-
-			if ($user->theme['template_inherits_id'])
-			{
-				$this->inherit_root = $phpbb_root_path . 'styles/' . $user->theme['template_inherit_path'] . '/template';
-			}
+			$this->cachepath = $phpbb_root_path . 'cache/tpl_' . $user->theme['template_path'] . '_';
 		}
 		else
 		{
@@ -147,11 +124,6 @@ class template
 
 			$this->filename[$handle] = $filename;
 			$this->files[$handle] = $this->root . '/' . $filename;
-
-			if ($this->inherit_root)
-			{
-				$this->files_inherit[$handle] = $this->inherit_root . '/' . $filename;
-			}
 		}
 
 		return true;
@@ -273,7 +245,6 @@ class template
 		$user->theme['template_inherits_id'] = $this->orig_tpl_inherits_id;
 
 		$filename = $this->cachepath . str_replace('/', '.', $this->filename[$handle]) . '.' . $phpEx;
-		$this->files_template[$handle] = (isset($user->theme['template_id'])) ? $user->theme['template_id'] : 0;
 
 		$recompile = false;
 		if (!file_exists($filename) || @filesize($filename) === 0 || defined('DEBUG_EXTRA'))
@@ -304,13 +275,6 @@ class template
 			include($phpbb_root_path . 'includes/functions_template.' . $phpEx);
 		}
 
-		// Inheritance - we point to another template file for this one. Equality is also used for store_db
-		if (isset($user->theme['template_inherits_id']) && $user->theme['template_inherits_id'] && !file_exists($this->files[$handle]))
-		{
-			$this->files[$handle] = $this->files_inherit[$handle];
-			$this->files_template[$handle] = $user->theme['template_inherits_id'];
-		}
-
 		$compile = new template_compile($this);
 
 		// If we don't have a file assigned to this handle, die.
@@ -327,71 +291,29 @@ class template
 		}
 
 		if (isset($user->theme['template_storedb']) && $user->theme['template_storedb'])
-		{
-			$rows = array();
-			$ids = array();
-			// Inheritance
-			if (isset($user->theme['template_inherits_id']) && $user->theme['template_inherits_id'])
-			{
-				$ids[] = $user->theme['template_inherits_id'];
-			}
-			$ids[] = $user->theme['template_id'];
-
-			foreach ($ids as $id)
 			{
 				$sql = 'SELECT *
 				FROM ' . STYLES_TEMPLATE_DATA_TABLE . '
-				WHERE template_id = ' . $id . "
+				WHERE template_id = ' . $user->theme['template_id'] . "
 					AND (template_filename = '" . $db->sql_escape($this->filename[$handle]) . "'
 						OR template_included " . $db->sql_like_expression($db->any_char . $this->filename[$handle] . ':' . $db->any_char) . ')';
-
 				$result = $db->sql_query($sql);
-				while ($row = $db->sql_fetchrow($result))
-				{
-					$rows[$row['template_filename']] = $row;
-				}
-				$db->sql_freeresult($result);
-			}
+			$row = $db->sql_fetchrow($result);
 
-			if (sizeof($rows))
+			if ($row)
 			{
-				foreach ($rows as $row)
+				do
 				{
-					$file = $this->root . '/' . $row['template_filename'];
-					$force_reload = false;
-					if ($row['template_id'] != $user->theme['template_id'])
-					{
-						// make sure that we are not overlooking a file not in the db yet
-						if (isset($user->theme['template_inherits_id']) && $user->theme['template_inherits_id'] && !file_exists($file))
-						{
-							$file = $this->inherit_root . '/' . $row['template_filename'];
-							$this->files[$row['template_filename']] = $file;
-							$this->files_inherit[$row['template_filename']] = $file;
-							$this->files_template[$row['template_filename']] = $user->theme['template_inherits_id'];
-						}
-						else if (isset($user->theme['template_inherits_id']) && $user->theme['template_inherits_id'])
-						{
-							// Ok, we have a situation. There is a file in the subtemplate, but nothing in the DB. We have to fix that.
-							$force_reload = true;
-							$this->files_template[$row['template_filename']] = $user->theme['template_inherits_id'];
-						}
-					}
-					else
-					{
-						$this->files_template[$row['template_filename']] = $user->theme['template_id'];
-					}
-
-					if ($force_reload || $row['template_mtime'] < filemtime($file))
+					if ($row['template_mtime'] < filemtime($phpbb_root_path . 'styles/' . $user->theme['template_path'] . '/template/' . $row['template_filename']))
 					{
 						if ($row['template_filename'] == $this->filename[$handle])
 						{
-							$compile->_tpl_load_file($handle, true);
+							$compile->_tpl_load_file($handle);
 						}
 						else
 						{
-							$this->files[$row['template_filename']] = $file;
-							$this->filename[$row['template_filename']] = $row['template_filename'];
-							$compile->_tpl_load_file($row['template_filename'], true);
+							$this->files[$row['template_filename']] = $this->root . '/' . $row['template_filename'];
+							$compile->_tpl_load_file($row['template_filename']);
 							unset($this->compiled_code[$row['template_filename']]);
 							unset($this->files[$row['template_filename']]);
 							unset($this->filename[$row['template_filename']]);
@@ -414,22 +336,15 @@ class template
 						}
 					}
 				}
+				while ($row = $db->sql_fetchrow($result));
 			}
 			else
 			{
-				$file = $this->root . '/' . $row['template_filename'];
-
-				if (isset($user->theme['template_inherits_id']) && $user->theme['template_inherits_id'] && !file_exists($file))
-				{
-					$file = $this->inherit_root . '/' . $row['template_filename'];
-					$this->files[$row['template_filename']] = $file;
-					$this->files_inherit[$row['template_filename']] = $file;
-					$this->files_template[$row['template_filename']] = $user->theme['template_inherits_id'];
-				}
 				// Try to load from filesystem and instruct to insert into the styles table...
 				$compile->_tpl_load_file($handle, true);
 				return false;
 			}
+			$db->sql_freeresult($result);
 
 			return false;
 		}
@@ -649,10 +564,6 @@ class template
 		$handle = $filename;
 		$this->filename[$handle] = $filename;
 		$this->files[$handle] = $this->root . '/' . $filename;
-		if ($this->inherit_root)
-		{
-			$this->files_inherit[$handle] = $this->inherit_root . '/' . $filename;
-		}
 
 		$filename = $this->_tpl_load($handle);
 

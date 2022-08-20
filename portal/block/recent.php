@@ -28,6 +28,7 @@ if ($config['portal_exclude_forums'])
 		if ($id > 0)
 		{
 			$sql_where .= ' AND forum_id <> ' . trim($id);
+			$recent_where .= ' AND phpbb_topics.forum_id != ' . trim($id);
 		}
 	}
 }
@@ -86,15 +87,17 @@ while( ($row = $db->sql_fetchrow($result)) && ($row['topic_title']) )
 $db->sql_freeresult($result);
 
 //
-// Recent topic (only show normal topic)
+// Recent posts (only show normal posts)
 //
-$sql = 'SELECT topic_title, forum_id, topic_id
-	FROM ' . TOPICS_TABLE . '
-	WHERE topic_status <> ' . FORUM_LINK . '
+$sql = "SELECT topic_title, phpbb_topics.forum_id, topic_id, topic_first_poster_name, topic_last_poster_name, topic_last_post_time, 
+		forum_name, topic_views, topic_replies, REPLACE(icons_url,'misc/','misc/r') as icon_url 
+	FROM " . TOPICS_TABLE . "
+	LEFT JOIN phpbb_forums ON phpbb_topics.forum_id = phpbb_forums.forum_id 
+	LEFT JOIN phpbb_icons ON phpbb_topics.icon_id = phpbb_icons.icons_id 
+	WHERE topic_status <> 2 
 		AND topic_approved = 1 
-		AND topic_type = ' . POST_NORMAL . '
-		' . $sql_where . '
-	ORDER BY topic_time DESC';
+		" . $recent_where . "
+	ORDER BY topic_last_post_time DESC";
 
 $result = $db->sql_query_limit($sql, $config['portal_max_topics']);
 

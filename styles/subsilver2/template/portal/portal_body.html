@@ -117,10 +117,6 @@ small, .small {
 			<!-- INCLUDE portal/block/recent.html -->
 		<!-- ENDIF -->			
 
-		<!-- IF S_DISPLAY_POLL -->
-			<!-- INCLUDE portal/block/poll.html -->
-		<!-- ENDIF -->		
-
 		<!-- IF S_DISPLAY_ANNOUNCEMENTS -->
 		<!-- IF S_ANNOUNCE_COMPACT -->
 			<!-- INCLUDE portal/block/announcements_compact.html -->
@@ -136,6 +132,10 @@ small, .small {
 			<!-- INCLUDE portal/block/news.html -->
 		<!-- ENDIF -->
 		<!-- ENDIF -->
+
+		<!-- IF S_DISPLAY_POLL -->
+			<!-- INCLUDE portal/block/poll.html -->
+		<!-- ENDIF -->		
 
 		<!-- IF S_DISPLAY_WORDGRAPH -->
 			<!-- INCLUDE portal/block/wordgraph.html -->
