@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Static PHP test</title>
+</head>
+<body>
+  <h1>Test: f=<span id="f">N/A</span>, t=<span id="t">N/A</span>, p=<span id="p">N/A</span></h1>
+  <script>
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const f = urlParams.get('f')
+  document.getElementById("f").innerHTML = f;
+  const t = urlParams.get('t')
+  document.getElementById("t").innerHTML = t;
+  const p = urlParams.get('p')
+  document.getElementById("p").innerHTML = p;
+  </script>
+</body>
+</html>
