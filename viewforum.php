@@ -142,7 +142,7 @@ else
 }
 
 // Dump out the page header and load viewforum template
-page_header($user->lang['VIEW_FORUM'] . ' - ' . $forum_data['forum_name'], true, $forum_id);
+page_header($user->lang['VIEW_FORUM'] . ' - ' . $forum_data['forum_name'], false, $forum_id);
 
 $template->set_filenames(array(
 	'body' => 'viewforum_body.html')
@@ -212,7 +212,10 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_forum_n
 }
 
 $s_forum_rules = '';
-gen_forum_auth_level('forum', $forum_id, $forum_data['forum_status']);
+if ($user->data['user_id'] != ANONYMOUS)
+{
+	gen_forum_auth_level('forum', $forum_id, $forum_data['forum_status']);
+}
 
 // Topic ordering options
 $limit_days = array(0 => $user->lang['ALL_TOPICS'], 1 => $user->lang['1_DAY'], 7 => $user->lang['7_DAYS'], 14 => $user->lang['2_WEEKS'], 30 => $user->lang['1_MONTH'], 90 => $user->lang['3_MONTHS'], 180 => $user->lang['6_MONTHS'], 365 => $user->lang['1_YEAR']);
@@ -305,7 +308,8 @@ $template->assign_vars(array(
 
 	'L_NO_TOPICS' 			=> ($forum_data['forum_status'] == ITEM_LOCKED) ? $user->lang['POST_FORUM_LOCKED'] : $user->lang['NO_TOPICS'],
 
-	'S_DISPLAY_POST_INFO'	=> ($forum_data['forum_type'] == FORUM_POST && ($auth->acl_get('f_post', $forum_id) || $user->data['user_id'] == ANONYMOUS)) ? true : false,
+	// Prevent the "Create new topic" button from appearing for Guest user
+	'S_DISPLAY_POST_INFO'   => ($forum_data['forum_type'] == FORUM_POST && $auth->acl_get('f_post', $forum_id)) ? true : false,
 
 	'S_IS_POSTABLE'			=> ($forum_data['forum_type'] == FORUM_POST) ? true : false,
 	'S_USER_CAN_POST'		=> ($auth->acl_get('f_post', $forum_id)) ? true : false,

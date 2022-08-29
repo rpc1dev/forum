@@ -869,7 +869,8 @@ if ($submit || $preview || $refresh)
 	}
 
 	// Parse subject
-	if (!$preview && !$refresh && utf8_clean_string($post_data['post_subject']) === '' && ($mode == 'post' || ($mode == 'edit' && $post_data['topic_first_post_id'] == $post_id)))
+	// Prevent a 'Can't create topic with an empty subject' error when editing...
+	if (!$preview && !$refresh && utf8_clean_string($post_data['post_subject']) === '' && $mode == 'post')
 	{
 		$error[] = $user->lang['EMPTY_SUBJECT'];
 	}

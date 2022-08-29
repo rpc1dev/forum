@@ -553,7 +553,10 @@ if ($topic_data['topic_attachment'])
 
 // Forum rules listing
 $s_forum_rules = '';
-gen_forum_auth_level('topic', $forum_id, $topic_data['forum_status']);
+if ($user->data['user_id'] != ANONYMOUS)
+{
+	gen_forum_auth_level('topic', $forum_id, $topic_data['forum_status']);
+}
 
 // Quick mod tools
 $allow_change_type = ($auth->acl_get('m_', $forum_id) || ($user->data['is_registered'] && $user->data['user_id'] == $topic_data['topic_poster'])) ? true : false;
@@ -666,8 +669,8 @@ $template->assign_vars(array(
 	'S_SEARCHBOX_ACTION'	=> append_sid("{$phpbb_root_path}search.$phpEx"),
 	'S_SEARCH_LOCAL_HIDDEN_FIELDS'	=> build_hidden_fields($s_search_hidden_fields),
 
-	'S_DISPLAY_POST_INFO'	=> ($topic_data['forum_type'] == FORUM_POST && ($auth->acl_get('f_post', $forum_id) || $user->data['user_id'] == ANONYMOUS)) ? true : false,
-	'S_DISPLAY_REPLY_INFO'	=> ($topic_data['forum_type'] == FORUM_POST && ($auth->acl_get('f_reply', $forum_id) || $user->data['user_id'] == ANONYMOUS)) ? true : false,
+	'S_DISPLAY_POST_INFO'	=> ($topic_data['forum_type'] == FORUM_POST && $auth->acl_get('f_post', $forum_id)) ? true : false,
+	'S_DISPLAY_REPLY_INFO'	=> ($topic_data['forum_type'] == FORUM_POST && $auth->acl_get('f_reply', $forum_id)) ? true : false,
 	'S_ENABLE_FEEDS_TOPIC'	=> ($config['feed_topic'] && !phpbb_optionget(FORUM_OPTION_FEED_EXCLUDE, $topic_data['forum_options'])) ? true : false,
 
 	'U_TOPIC'				=> "{$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id",
@@ -1135,7 +1138,7 @@ while ($row = $db->sql_fetchrow($result))
 			$id_cache[] = $poster_id;
 
 			$user_cache[$poster_id] = array(
-				'joined'		=> $user->format_date($row['user_regdate']),
+				'joined'		=> $user->format_date($row['user_regdate'], 'D Y.m.d'),
 				'posts'			=> $row['user_posts'],
 				'warnings'		=> (isset($row['user_warnings'])) ? $row['user_warnings'] : 0,
 				'from'			=> (!empty($row['user_from'])) ? $row['user_from'] : '',
@@ -1779,7 +1782,7 @@ if (empty($_REQUEST['t']) && !empty($topic_id))
 }
 
 // Output the page
-page_header($user->lang['VIEW_TOPIC'] . ' - ' . $topic_data['topic_title'], true, $forum_id);
+page_header($user->lang['VIEW_TOPIC'] . ' - ' . $topic_data['topic_title'], false, $forum_id);
 
 $template->set_filenames(array(
 	'body' => ($view == 'print') ? 'viewtopic_print.html' : 'viewtopic_body.html')

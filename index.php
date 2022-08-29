@@ -135,8 +135,8 @@ $template->assign_vars(array(
 	'U_MCP'				=> ($auth->acl_get('m_') || $auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=main&amp;mode=front', true, $user->session_id) : '')
 );
 
-// Output page
-page_header($user->lang['INDEX']);
+// Output page (adding 'false' disables the "Who's online" panel)
+page_header($user->lang['INDEX'], false);
 
 $template->set_filenames(array(
 	'body' => 'index_body.html')
