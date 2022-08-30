@@ -79,7 +79,9 @@ class reparse_bbcode
 	/**
 	* Number of posts to be parsed per run
 	*/
-	var $step_size = 150;
+	var $step_size = 1000;
+	var $min_post_id = 30000;
+	var $max_post_id = 211106;
 
 	/**
 	* The name of the table that we use to backup posts before running
@@ -116,9 +118,12 @@ class reparse_bbcode
 			'title'	=> 'REPARSE_BBCODE',
 			'vars'	=> array(
 				'legend1'			=> 'REPARSE_BBCODE',
+				'min_post_id'		=> array('lang'	=> 'Minimum post_id', 'type' => 'textarea:1:16', 'default' => $this->min_post_id),
+				'max_post_id'		=> array('lang'	=> 'Maximum post_id', 'type' => 'textarea:1:16', 'default' => $this->max_post_id),
+				'step_size'		=> array('lang'	=> 'Step size', 'type' => 'textarea:1:16', 'default' => $this->step_size),
 				'reparseids'		=> array('lang'	=> 'REPARSE_POST_IDS', 'type' => 'textarea:3:255', 'explain' => 'true'),
 				'reparsepms'		=> array('lang' => 'REPARSE_PM_IDS', 'type' => 'textarea:3:255', 'explain' => 'true'),
-				'reparseall'		=> array('lang' => 'REPARSE_ALL', 'type' => 'checkbox', 'explain' => true),
+				'reparseall'		=> array('lang' => 'REPARSE_ALL', 'type' => 'checkbox', 'explain' => true, 'default' => 'true'),
 			),
 		);
 	}
@@ -134,8 +139,11 @@ class reparse_bbcode
 
 		// Define some vars that we'll need
 		$last_batch			= false;
-		$reparse_id 		= request_var('reparseids', '');
-		$reparse_pm_id		= request_var('reparsepms', '');
+		$this->min_post_id		= request_var('min_post_id', 0);
+		$this->max_post_id		= request_var('max_post_id', 0);
+		$this->step_size		= request_var('step_size', 500);
+		$reparse_id 			= request_var('reparseids', '');
+		$reparse_pm_id			= request_var('reparsepms', '');
 		$mode				= request_var('mode', BBCODE_REPARSE_POSTS);
 		$step				= request_var('step', 0);
 		$start				= $step * $this->step_size;
@@ -261,7 +269,7 @@ class reparse_bbcode
 					break;
 				}
 
-				$sql_where = ($bitfield === false) ? '' : "WHERE {$bbf} <> ''";
+				$sql_where = 'WHERE post_id >= ' . $this->min_post_id . ' AND post_id <= ' . $this->max_post_id;
 
 				$sql = "SELECT COUNT({$ccol}) AS cnt
 					FROM {$ctab}
@@ -295,7 +303,7 @@ class reparse_bbcode
 						TOPICS_TABLE	=> 't',
 						USERS_TABLE		=> 'u',
 					),
-					'WHERE'		=> (($bitfield) ? "p.bbcode_bitfield <> '' AND " : '') . 't.topic_id = p.topic_id AND u.user_id = p.poster_id AND f.forum_id = t.forum_id' . (sizeof($reparse_posts) ? ' AND ' . $db->sql_in_set('p.post_id', $reparse_posts) : ''),
+					'WHERE'		=> ('p.post_id >= ' . $this->min_post_id . ' AND ') . ('p.post_id <= ' . $this->max_post_id . ' AND ') . 't.topic_id = p.topic_id AND u.user_id = p.poster_id AND f.forum_id = t.forum_id' . (sizeof($reparse_posts) ? ' AND ' . $db->sql_in_set('p.post_id', $reparse_posts) : ''),
 				);
 			break;
 
@@ -418,7 +426,7 @@ class reparse_bbcode
 		}
 
 		// Finished?
-		if ($last_batch && $mode == BBCODE_REPARSE_SIGS)
+		if ($last_batch && $mode == BBCODE_REPARSE_POSTS)
 		{
 			// Done!
 			$cache->destroy('_stk_reparse_posts');
@@ -458,6 +466,9 @@ class reparse_bbcode
 			'mode'		=> $_next_mode,
 			'step'		=> $_next_step,
 			'reparseall'	=> (!empty($_REQUEST['reparseall'])) ? true : false,
+			'min_post_id'	=> $this->min_post_id,
+			'max_post_id'	=> $this->max_post_id,
+			'step_size'	=> $this->step_size,
 		);
 
 		meta_refresh(1, append_sid(STK_ROOT_PATH . 'index.' . PHP_EXT, $params));
