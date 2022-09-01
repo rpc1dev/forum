@@ -6,13 +6,21 @@
 <!--
 .gensmall {
 	margin: 1px 1px;
-	font-size: 10px;
+	font-size: 1.1em;
+}
+
+.cat, th {
+	font-size: 1.2em;
+}
+
+.ifs, .ul-link {
+	font-size: 1.1em;
 }
 
 small, .small {
-	font-size:10px; 
-	font-weight:bold;
-	font-family:Arial, Helvetica, sans-serif;
+	font-size: 1em; 
+	font-weight: bold;
+	font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Container for sub-navigation list */
@@ -26,7 +34,7 @@ small, .small {
 	color: #105289;
 	font-weight: normal;
 	padding: 1px;
-	display:block;
+	display: block;
 }
 
 #navigation a:hover {
@@ -52,10 +60,6 @@ small, .small {
 	
 		<!-- IF S_DISPLAY_CHANGE_STYLE -->
 			<!-- INCLUDE portal/block/change_style.html -->
-		<!-- ENDIF -->
-		
-		<!-- IF S_DISPLAY_PAY_S -->
-			<!-- INCLUDE portal/block/donation/donation_small.html -->
 		<!-- ENDIF -->
 
 		<!-- IF S_DISPLAY_LATEST_MEMBERS -->
@@ -170,7 +174,11 @@ small, .small {
 		<br clear="all" />
 [-] latest files => only for site version //-->
 
-		<!-- IF not S_USER_LOGGED_IN -->
+		<!-- IF S_DISPLAY_PAY_S -->
+		<!-- INCLUDE portal/block/donation/donation_small.html -->
+		<!-- ENDIF -->
+
+		<!-- IF not S_USER_LOGGED_IN and not S_BOT -->
 		<!-- INCLUDE portal/block/login_box.html -->
 		<!-- ENDIF -->
 
